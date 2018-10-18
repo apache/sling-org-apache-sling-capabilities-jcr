@@ -1,0 +1,7 @@
+Import-Package:\
+  org.apache.felix.utils.json;resolution:=optional,\
+  *
+
+-removeheaders:\
+  Include-Resource,\
+  Private-Package
