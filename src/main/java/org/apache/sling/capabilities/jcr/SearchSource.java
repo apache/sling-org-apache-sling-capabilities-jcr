@@ -27,6 +27,7 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import org.apache.sling.capabilities.CapabilitiesSource;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -40,20 +41,25 @@ public class SearchSource implements CapabilitiesSource {
 
     public static final String SSA_PROP_NAME = "similarity.search.active";
 
+    public static final String SUBSERVICE_NAME = "search";
+
     public static final int SIMILARITY_SEARCH_CACHE_LIFETIME_SECONDS = 60;
 
     private final Logger log = LoggerFactory.getLogger(getClass().getName());
-    private boolean similaritySearchActive;
+    private String similaritySearchActiveResult;
     private long similaritySearchCacheExpires;
 
     @Reference
     private SlingRepository repository;
     
+    @Reference(target="("+ServiceUserMapped.SUBSERVICENAME+"=" + SUBSERVICE_NAME + ")")
+    private ServiceUserMapped scriptServiceUserMapped;
+
     @Override
     public Map<String, Object> getCapabilities() throws Exception {
         refreshCachedValues();
         final Map<String, Object> result = new HashMap<>();
-        result.put("similarity.search.active", String.valueOf(similaritySearchActive));
+        result.put("similarity.search.active", similaritySearchActiveResult);
         return result;
     }
 
@@ -61,27 +67,32 @@ public class SearchSource implements CapabilitiesSource {
      *  searching for any index definition that has useInSimilarity=true.
      *  Cache the result to avoid making too many searches.
      */
-    private void refreshCachedValues() throws RepositoryException {
+    private void refreshCachedValues() {
         if(System.currentTimeMillis() < similaritySearchCacheExpires) {
             log.debug("Using cached similaritySearchActive value");
             return;
         }
 
         similaritySearchCacheExpires = System.currentTimeMillis() + (SIMILARITY_SEARCH_CACHE_LIFETIME_SECONDS * 1000L);
+        final String query = "/jcr:root/oak:index//* [@useInSimilarity = true]";
 
         synchronized(this) {
-            // TODO use a service user
-            final Session session = repository.loginAdministrative(null);
+            Session session = null;
             try {
-                    String query = "/jcr:root/oak:index//properties//* [@useInSimilarity = \"true\"]";
-                    final QueryManager qm = session.getWorkspace().getQueryManager();
-                    final QueryResult qr = qm.createQuery(query, Query.XPATH).execute();
-                    similaritySearchActive = qr.getNodes().hasNext();
-                    log.debug("Recomputed {}={} using query {}", SSA_PROP_NAME, similaritySearchActive, query);
+                session = repository.loginService(SUBSERVICE_NAME, null);
+                final QueryManager qm = session.getWorkspace().getQueryManager();
+                final QueryResult qr = qm.createQuery(query, Query.XPATH).execute();
+                similaritySearchActiveResult = String.valueOf(qr.getNodes().hasNext());
+            } catch(RepositoryException rex) {
+                similaritySearchActiveResult = rex.toString();
             } finally {
-                session.logout();
+                if(session != null) {
+                    session.logout();
+                }
             }
         }
+
+        log.debug("Recomputed {}={} using query {}", SSA_PROP_NAME, similaritySearchActiveResult, query);
     }
     
     @Override
