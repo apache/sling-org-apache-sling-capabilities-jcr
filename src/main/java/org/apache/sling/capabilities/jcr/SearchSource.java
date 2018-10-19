@@ -28,13 +28,19 @@ import javax.jcr.query.QueryResult;
 import org.apache.sling.capabilities.CapabilitiesSource;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** CapabilitiesSource that provides information on the JCR Repository's search features */
 @Component(service = CapabilitiesSource.class)
+@Designate(ocd = SearchSource.Config.class)
 public class SearchSource implements CapabilitiesSource {
 
     public static final String NAMESPACE = "org.apache.sling.jcr.search";
@@ -43,17 +49,38 @@ public class SearchSource implements CapabilitiesSource {
 
     public static final String SUBSERVICE_NAME = "search";
 
+    public static final String DEFAULT_QUERY = "/jcr:root/oak:index//* [@useInSimilarity = true]";
+
     public static final int SIMILARITY_SEARCH_CACHE_LIFETIME_SECONDS = 60;
 
     private final Logger log = LoggerFactory.getLogger(getClass().getName());
     private String similaritySearchActiveResult;
     private long similaritySearchCacheExpires;
+    private String similarityIndexQuery;
 
     @Reference
     private SlingRepository repository;
     
     @Reference(target="("+ServiceUserMapped.SUBSERVICENAME+"=" + SUBSERVICE_NAME + ")")
     private ServiceUserMapped scriptServiceUserMapped;
+
+    @ObjectClassDefinition(
+        name = "Apache Sling JCR Capabilities - Search Source",
+        description = "Provides information JCR search features"
+    )
+    public static @interface Config {
+        @AttributeDefinition(
+            name = "Similarity Index Query",
+            description = "A JCR XPAth query that returns at least 1 Node if similarity search is available."
+                + " The service user that this component uses must have sufficient rights to read the corresponding nodes."
+        )
+        String similarityIndexQuery() default DEFAULT_QUERY;
+    }
+
+    @Activate
+    protected void activate(Config cfg, ComponentContext ctx) {
+        similarityIndexQuery = cfg.similarityIndexQuery();
+    }
 
     @Override
     public Map<String, Object> getCapabilities() throws Exception {
@@ -74,14 +101,13 @@ public class SearchSource implements CapabilitiesSource {
         }
 
         similaritySearchCacheExpires = System.currentTimeMillis() + (SIMILARITY_SEARCH_CACHE_LIFETIME_SECONDS * 1000L);
-        final String query = "/jcr:root/oak:index//* [@useInSimilarity = true]";
 
         synchronized(this) {
             Session session = null;
             try {
                 session = repository.loginService(SUBSERVICE_NAME, null);
                 final QueryManager qm = session.getWorkspace().getQueryManager();
-                final QueryResult qr = qm.createQuery(query, Query.XPATH).execute();
+                final QueryResult qr = qm.createQuery(similarityIndexQuery, Query.XPATH).execute();
                 similaritySearchActiveResult = String.valueOf(qr.getNodes().hasNext());
             } catch(RepositoryException rex) {
                 similaritySearchActiveResult = rex.toString();
@@ -92,7 +118,7 @@ public class SearchSource implements CapabilitiesSource {
             }
         }
 
-        log.debug("Recomputed {}={} using query {}", SSA_PROP_NAME, similaritySearchActiveResult, query);
+        log.debug("Recomputed {}={} using query {}", SSA_PROP_NAME, similaritySearchActiveResult, similarityIndexQuery);
     }
     
     @Override
