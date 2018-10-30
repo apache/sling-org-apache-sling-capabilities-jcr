@@ -22,7 +22,6 @@ import javax.inject.Inject;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -31,7 +30,6 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-@Ignore("Need to fix unresolved bundles")
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class JcrCapabilitiesBundleIT extends JcrCapabilitiesTestSupport {

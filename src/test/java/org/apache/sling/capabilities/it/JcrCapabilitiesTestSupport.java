@@ -38,15 +38,22 @@ public abstract class JcrCapabilitiesTestSupport extends TestSupport {
         return new Option[]{
             baseConfiguration(),
             
+            // Use older versions to stay compatible with older versions of Sling - no need for bleeding edge stuff
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version("1.1.2"),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version("2.0.2"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.api").version("2.11.0"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.jcr-wrapper").version("2.0.0"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.api").version("2.3.0"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.serviceusermapper").version("1.2.2"),
             
-            // TODO update version once we have a release
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.capabilities").version("0.0.1-SNAPSHOT"),
-                
-            // This bundle
+            // Dependencies of the above bundles
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.json").version("2.0.16"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.osgi").version("2.4.0"),
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin").version("1.4.4"),
+
+            // This bundle and the core capabilities bundle
             testBundle("bundle.filename"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.capabilities").versionAsInProject(),
             
             // Test stuff
             junitBundles(),
