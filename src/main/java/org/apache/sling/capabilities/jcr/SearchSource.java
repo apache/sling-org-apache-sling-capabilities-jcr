@@ -51,11 +51,10 @@ public class SearchSource implements CapabilitiesSource {
 
     public static final String DEFAULT_QUERY = "/jcr:root/oak:index//* [@useInSimilarity = true]";
 
-    public static final int SIMILARITY_SEARCH_CACHE_LIFETIME_SECONDS = 60;
-
     private final Logger log = LoggerFactory.getLogger(getClass().getName());
     private String similaritySearchActiveResult;
     private long similaritySearchCacheExpires;
+    private int cacheLifetimeSeconds;
     private String similarityIndexQuery;
 
     @Reference
@@ -75,11 +74,18 @@ public class SearchSource implements CapabilitiesSource {
                 + " The service user that this component uses must have sufficient rights to read the corresponding nodes."
         )
         String similarityIndexQuery() default DEFAULT_QUERY;
+
+        @AttributeDefinition(
+            name = "Cache time-to-live in seconds",
+            description = "The results of expensive operations like queries are cached for this amount of time"
+        )
+        int cacheLifetimeSeconds() default 60;
     }
 
     @Activate
     protected void activate(Config cfg, ComponentContext ctx) {
         similarityIndexQuery = cfg.similarityIndexQuery();
+        cacheLifetimeSeconds = cfg.cacheLifetimeSeconds();
     }
 
     @Override
@@ -100,7 +106,7 @@ public class SearchSource implements CapabilitiesSource {
             return;
         }
 
-        similaritySearchCacheExpires = System.currentTimeMillis() + (SIMILARITY_SEARCH_CACHE_LIFETIME_SECONDS * 1000L);
+        similaritySearchCacheExpires = System.currentTimeMillis() + (cacheLifetimeSeconds * 1000L);
 
         synchronized(this) {
             Session session = null;
