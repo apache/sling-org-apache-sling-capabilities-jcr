@@ -30,6 +30,7 @@ import javax.jcr.Session;
 import org.apache.sling.capabilities.CapabilitiesSource;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
+import org.apache.sling.testing.mock.osgi.ReferenceViolationException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import static org.junit.Assert.assertEquals;
@@ -58,11 +59,17 @@ public class SearchSourceTest {
         return props;
     }
 
-    private void registerSearchSource(Object ... configNameValuePairs) throws IOException {
+    private void registerSearchSource(boolean withServiceUserMapped, Object ... configNameValuePairs) throws IOException {
         final ConfigurationAdmin ca = context.getService(ConfigurationAdmin.class);
         assertNotNull("Expecting a ConfigurationAdmin service", ca);
         final Configuration cfg = ca.getConfiguration(SearchSource.class.getName());
         cfg.update(props(configNameValuePairs));
+
+        if(withServiceUserMapped) {
+            final ServiceUserMapped sum = new ServiceUserMapped() {};
+            context.registerService(ServiceUserMapped.class, sum,
+                props(ServiceUserMapped.SUBSERVICENAME, SearchSource.SUBSERVICE_NAME));
+        }
 
         final SearchSource ss = new SearchSource();
         context.registerInjectActivateService(ss);
@@ -85,28 +92,25 @@ public class SearchSourceTest {
         }
     }
 
-    @Before
-    public void setup() throws IOException {
-
-        final ServiceUserMapped sum = new ServiceUserMapped() {};
-        context.registerService(ServiceUserMapped.class, sum, 
-                props(ServiceUserMapped.SUBSERVICENAME, SearchSource.SUBSERVICE_NAME));
-    }
-
     @Test
     public void testNoSimilarity() throws Exception {
-        registerSearchSource();
+        registerSearchSource(true);
         assertNotNull(searchSource.getCapabilities());
         assertEquals("false", searchSource.getCapabilities().get(SIMILARITY_ACTIVE_CAP));
     }
 
     @Test
     public void testHasSimilarity() throws Exception {
-        registerSearchSource();
+        registerSearchSource(true);
         createMockIndexNode("/oak:index", "foo", "useInSimilarity", true);
 
         assertNotNull(searchSource.getCapabilities());
         assertEquals("true", searchSource.getCapabilities().get(SIMILARITY_ACTIVE_CAP));
+    }
+
+    @Test(expected=ReferenceViolationException.class)
+    public void testNoServiceUserMapped() throws Exception {
+        registerSearchSource(false);
     }
 
     @Test
@@ -114,6 +118,7 @@ public class SearchSourceTest {
         final int lifetimeSeconds = 2;
         final String uniquePath = "testCustomQuery_" + UUID.randomUUID();
         registerSearchSource(
+                true,
                 "similarityIndexQuery", "/jcr:root/" + uniquePath,
                 "cacheLifetimeSeconds", lifetimeSeconds);
 
