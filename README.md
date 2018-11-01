@@ -7,10 +7,54 @@ Sling Capabilities - JCR sources
 
 This module is part of the [Apache Sling](https://sling.apache.org) project.
 
-It provides information about the JCR repository to the Sling Capabilities module.
+It provides information about the JCR repository to the [Sling Capabilities](https://github.com/apache/sling-org-apache-sling-capabilities) module.
 
 It is implemented separately to avoid making the core module dependent on JCR APIs.
 
-TODO: complete this.
+Usage
+-----
+For now, this module's `SearchSource` provides just one capability that indicates whether the Oak similarity search feature is available. Here's typical JSON output of the `CapabilitiesServlet` when this source is active:
 
-TODO: add a link to these modules to the sling website bundles page.
+    {
+      "org.apache.sling.capabilities": {
+        "data": {
+          "org.apache.sling.jcr.search": {
+            "similarity.search.active": "false"
+          }
+        }
+      }
+    }
+
+To compute this value, the `SearchSource` needs to make a JCR query to find out whether similarity search is available - that is the case if there is at least one Oak index configuration which has `@useInSimilarity = true`.
+
+That query is configurable in the `SearchSource` component, with a default value that should work for common cases.
+
+The cache lifetime of that value in the `SearchSource` component is also configurable, with a default of 60 seconds. The component caches the query result for that amount of time to avoid making too many queries.
+
+To execute this query, the `SearchSource` uses a Service User that needs read access under `/oak:index`. 
+
+The following feature model excerpt can be used to set that up. It also creates a `/var/capabilities/public` path that every user can read. Resources with the `sling/capabilities` resource type can be created under that path to provide access to the capabilities. See the Capabilities module documentation for more information.
+
+    "configurations": {
+        "org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended~cq-capabilities-jcr": {
+          "user.mapping": [
+            "org.apache.sling.capabilities.jcr:search=[capabilities-search]"
+          ]
+        },
+        "org.apache.sling.capabilities.internal.CapabilitiesServlet": {
+          "resourcePathPatterns" : "/var/capabilities/.*"
+        }
+      },
+      "repoinit:TEXT|true": [
+        "create service user capabilities-search",
+        "",
+        "set ACL for capabilities-search",
+        "allow jcr:read on /oak:index",
+        "end",
+        "",
+        "create path /var/capabilities/public(nt:unstructured)",
+        "",
+        "set ACL on /var/capabilities/public",
+        "allow jcr:read for everyone",
+        "end"
+    ]
