@@ -34,6 +34,12 @@
     <sling.java.version>7</sling.java.version>
     <org.ops4j.pax.exam.version>4.12.0</org.ops4j.pax.exam.version>
   </properties>
+  <scm>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-capabilities-jcr.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-capabilities-jcr.git</developerConnection>
+    <url>https://gitbox.apache.org/repos/asf?p=sling-org-apache-sling-capabilities-jcr.git</url>
+    <tag>HEAD</tag>
+  </scm>
   <build>
     <plugins>
       <plugin>
