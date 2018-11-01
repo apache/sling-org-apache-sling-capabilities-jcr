@@ -22,12 +22,12 @@
     <artifactId>sling</artifactId>
     <groupId>org.apache.sling</groupId>
     <version>34</version>
-    <relativePath/>
+    <relativePath />
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <name>Apache Sling Capabilities - JCR source</name>
   <artifactId>org.apache.sling.capabilities.jcr</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.0</version>
   <properties>
     <!-- This module can work with older versions of Sling
          as well, so be conservative here -->
@@ -38,7 +38,7 @@
     <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-capabilities-jcr.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-capabilities-jcr.git</developerConnection>
     <url>https://gitbox.apache.org/repos/asf?p=sling-org-apache-sling-capabilities-jcr.git</url>
-    <tag>HEAD</tag>
+    <tag>org.apache.sling.capabilities.jcr-0.1.0</tag>
   </scm>
   <build>
     <plugins>
