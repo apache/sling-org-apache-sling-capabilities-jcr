@@ -19,14 +19,12 @@
 package org.apache.sling.capabilities.jcr;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.UUID;
-import javax.inject.Inject;
 import javax.jcr.Node;
 import javax.jcr.Session;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.capabilities.CapabilitiesSource;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
@@ -36,9 +34,9 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -50,6 +48,7 @@ public class SearchSourceTest {
     private static final String SIMILARITY_ACTIVE_CAP = "similarity.search.active";
 
     private CapabilitiesSource searchSource;
+    private ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
 
     private Dictionary<String, Object> props(Object ... nameValuePairs) {
         final Dictionary<String, Object> props = new Hashtable<>();
@@ -95,8 +94,8 @@ public class SearchSourceTest {
     @Test
     public void testNoSimilarity() throws Exception {
         registerSearchSource(true);
-        assertNotNull(searchSource.getCapabilities());
-        assertEquals("false", searchSource.getCapabilities().get(SIMILARITY_ACTIVE_CAP));
+        assertNotNull(searchSource.getCapabilities(resolver));
+        assertEquals("false", searchSource.getCapabilities(resolver).get(SIMILARITY_ACTIVE_CAP));
     }
 
     @Test
@@ -104,8 +103,8 @@ public class SearchSourceTest {
         registerSearchSource(true);
         createMockIndexNode("/oak:index", "foo", "useInSimilarity", true);
 
-        assertNotNull(searchSource.getCapabilities());
-        assertEquals("true", searchSource.getCapabilities().get(SIMILARITY_ACTIVE_CAP));
+        assertNotNull(searchSource.getCapabilities(resolver));
+        assertEquals("true", searchSource.getCapabilities(resolver).get(SIMILARITY_ACTIVE_CAP));
     }
 
     @Test(expected=ReferenceViolationException.class)
@@ -123,8 +122,8 @@ public class SearchSourceTest {
                 "cacheLifetimeSeconds", lifetimeSeconds);
 
         // With our custom query we get false first
-        assertNotNull(searchSource.getCapabilities());
-        assertEquals("false", searchSource.getCapabilities().get(SIMILARITY_ACTIVE_CAP));
+        assertNotNull(searchSource.getCapabilities(resolver));
+        assertEquals("false", searchSource.getCapabilities(resolver).get(SIMILARITY_ACTIVE_CAP));
 
         // Create a node that causes the query to return something
         // The capability value will change after some time, once its cache expires
@@ -136,7 +135,7 @@ public class SearchSourceTest {
         int nTrue = 0;
         final long testEnd = System.currentTimeMillis() + lifetimeSeconds * 1000L + 1500L;
         while(System.currentTimeMillis() < testEnd) {
-            final Object value = searchSource.getCapabilities().get(SIMILARITY_ACTIVE_CAP);
+            final Object value = searchSource.getCapabilities(resolver).get(SIMILARITY_ACTIVE_CAP);
             if("false".equals(value)) {
                 assertEquals("Expecting true value to come after all false values", 0, nTrue);
                 nFalse++;

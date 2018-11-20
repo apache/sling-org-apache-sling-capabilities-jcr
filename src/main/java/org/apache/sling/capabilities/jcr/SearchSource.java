@@ -25,6 +25,7 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.capabilities.CapabilitiesSource;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
@@ -89,8 +90,8 @@ public class SearchSource implements CapabilitiesSource {
     }
 
     @Override
-    public Map<String, Object> getCapabilities() throws Exception {
-        refreshCachedValues();
+    public Map<String, Object> getCapabilities(ResourceResolver rr) throws Exception {
+        refreshCachedValues(rr);
         final Map<String, Object> result = new HashMap<>();
         result.put("similarity.search.active", similaritySearchActiveResult);
         return result;
@@ -100,7 +101,8 @@ public class SearchSource implements CapabilitiesSource {
      *  searching for any index definition that has useInSimilarity=true.
      *  Cache the result to avoid making too many searches.
      */
-    private void refreshCachedValues() {
+    private void refreshCachedValues(ResourceResolver unused) {
+
         if(System.currentTimeMillis() < similaritySearchCacheExpires) {
             log.debug("Using cached similaritySearchActive value");
             return;
@@ -111,6 +113,11 @@ public class SearchSource implements CapabilitiesSource {
         synchronized(this) {
             Session session = null;
             try {
+                // TODO for now we need a service user as in general users do not have
+                // access to /oak:index where the information that we need is found.
+                // This information should be provided by Oak in a different way such as
+                // JCR Repository descriptors or OSGi service properties on the Repository
+                // object.
                 session = repository.loginService(SUBSERVICE_NAME, null);
                 final QueryManager qm = session.getWorkspace().getQueryManager();
                 final QueryResult qr = qm.createQuery(similarityIndexQuery, Query.XPATH).execute();
