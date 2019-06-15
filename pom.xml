@@ -18,21 +18,24 @@
   ~ under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <parent>
-    <artifactId>sling</artifactId>
     <groupId>org.apache.sling</groupId>
-    <version>34</version>
+    <artifactId>sling-bundle-parent</artifactId>
+    <version>35</version>
     <relativePath />
   </parent>
+
   <modelVersion>4.0.0</modelVersion>
+
   <name>Apache Sling Capabilities - JCR source</name>
   <artifactId>org.apache.sling.capabilities.jcr</artifactId>
   <version>0.1.3-SNAPSHOT</version>
   <properties>
     <!-- This module can work with older versions of Sling
          as well, so be conservative here -->
-    <sling.java.version>7</sling.java.version>
-    <org.ops4j.pax.exam.version>4.12.0</org.ops4j.pax.exam.version>
+    <sling.java.version>8</sling.java.version>
+    <org.ops4j.pax.exam.version>4.13.1</org.ops4j.pax.exam.version>
   </properties>
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-capabilities-jcr.git</connection>
@@ -159,20 +162,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>5.6.10</version>
+      <version>6.0.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.paxexam</artifactId>
-      <version>2.0.0</version>
+      <version>3.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
