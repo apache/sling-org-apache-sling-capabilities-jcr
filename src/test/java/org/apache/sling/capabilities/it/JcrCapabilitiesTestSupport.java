@@ -27,6 +27,7 @@ import static org.apache.sling.testing.paxexam.SlingOptions.logback;
 import static org.apache.sling.testing.paxexam.SlingOptions.scr;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
 
 public abstract class JcrCapabilitiesTestSupport extends TestSupport {
 
@@ -35,8 +36,8 @@ public abstract class JcrCapabilitiesTestSupport extends TestSupport {
         // Keep versions low for our dependencies, to make sure this bundle stays
         // compatible with older Sling versions.
         SlingOptions.versionResolver.setVersion("slf4j", "slf4j-api", "1.7.6");
-                
-        return new Option[]{
+
+        return options(
             baseConfiguration(),
             
             // Use older versions to stay compatible with older versions of Sling - no need for bleeding edge stuff
@@ -59,6 +60,6 @@ public abstract class JcrCapabilitiesTestSupport extends TestSupport {
             // Test stuff
             junitBundles(),
             logback()
-        };
+        );
     }
 }
