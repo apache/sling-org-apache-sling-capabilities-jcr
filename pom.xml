@@ -35,7 +35,7 @@
     <!-- This module can work with older versions of Sling
          as well, so be conservative here -->
     <sling.java.version>8</sling.java.version>
-    <org.ops4j.pax.exam.version>4.13.1</org.ops4j.pax.exam.version>
+    <org.ops4j.pax.exam.version>4.13.2</org.ops4j.pax.exam.version>
   </properties>
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-capabilities-jcr.git</connection>
